@@ -10,10 +10,18 @@ class App:
         self.clock = clock
         self.zoom = zoom
         self.target_fps = target_fps
+        self.__width =  int(self.screen.get_width() / zoom)
+        self.__height = int(self.screen.get_height() / zoom)
         self.__delta_time: float = 1.0 / target_fps
 
     def tick(self):
         self.__delta_time = float(self.clock.tick(self.target_fps)) / 1000
+
+    @property
+    def width(self): return self.__width
+
+    @property
+    def height(self): return self.__height
 
     @property
     def dt(self) -> float:

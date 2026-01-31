@@ -2,16 +2,22 @@ from matrixrender import render
 
 App = render.init_screen(30, 30, zoom = 20)
 
-State = render.State(App.screen.get_width(), App.screen.get_height())
+State = render.State(App.width, App.height)
 
+# State.area[x, y]
 State.area[0, 0] = 1
+State.area[0, 1] = 3
 
 render.register_state(1, render.pygame.Color(255, 0, 0, 255))  # Full Red
 
 while True:
+    for event in App.clear_events(): ...  # Clear events. You can process/check them if you
+                                          # need key-based events (ex. KEY_LEFT)
+
+    # Update/refresh the screen
+    # Already calls clock.tick(), so no need to do it ourselves
     success, exc = render.update_screen(App, State)
 
+    # Throw an error if we failed to update the screen
     if (not success):
         raise exc
-    
-    for event in App.clear_events(): ...
