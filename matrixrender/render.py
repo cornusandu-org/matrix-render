@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 import typing as ttypes
+from PIL import Image
 
 class WindowExitRequested(BaseException): ...
 
@@ -65,23 +66,58 @@ def _draw_cell(
     screen: pygame.Surface,
     x: int,
     y: int,
-    color: pygame.Color,
+    visual: pygame.Color | pygame.Surface,
     cell_size: int,
 ) -> None:
-    rect = pygame.Rect(
-        x * cell_size,
-        y * cell_size,
-        cell_size,
-        cell_size,
-    )
-    pygame.draw.rect(screen, color, rect)
+    dest = (x * cell_size, y * cell_size)
+
+    if isinstance(visual, pygame.Surface):
+        screen.blit(visual, dest)
+    else:
+        rect = pygame.Rect(dest[0], dest[1], cell_size, cell_size)
+        pygame.draw.rect(screen, visual, rect)
+
+
+def pil_to_surface(img: Image.Image) -> pygame.Surface:
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGBA")
+
+    data = img.tobytes()
+    size = img.size
+    mode = img.mode
+
+    return pygame.image.fromstring(data, size, mode)
+
 
 WHITE: pygame.Color = pygame.Color(255, 255, 255, 255)
 BLACK: pygame.Color = pygame.Color( 0,   0,   0,  255)
-_states = {0: WHITE}
+_states: dict[int, pygame.Color | pygame.Surface] = {0: WHITE}
 
-def register_state(value: int, color: pygame.Color) -> None:
-    _states[value] = color
+def register_state(
+    value: int,
+    visual: pygame.Color | Image.Image,
+    *,
+    app: App | None = None
+) -> None:
+    if isinstance(visual, Image.Image):
+        surface = pil_to_surface(visual)
+
+        if app is None:
+            raise ValueError("Registering an Image as a state requires passing the app= keyword argument (type App)")
+
+        if app.zoom is not None:
+            surface = pygame.transform.scale(
+                surface,
+                (app.zoom, app.zoom),
+            )
+
+        _states[value] = surface
+
+    elif isinstance(visual, pygame.Color):
+        _states[value] = visual
+
+    else:
+        raise TypeError("State visual must be pygame.Color or PIL.Image.Image")
 
 def update_screen(app: App, state: State) -> tuple[bool, ttypes.Optional[Exception]]:
     # If types don't correspond, raise Error as the caller is possibly in an invalid state

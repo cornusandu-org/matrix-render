@@ -1,14 +1,19 @@
 from matrixrender import render
+from PIL import Image
 
-App = render.init_screen(30, 30, zoom = 20)
+img = Image.open("assets/image.png")
+
+App = render.init_screen(20, 20, zoom = 30)
 
 State = render.State(App.width, App.height)
 
 # State.area[x, y]
 State.area[0, 0] = 1
-State.area[0, 1] = 3
+State.area[0, 1] = 2
+State.area[0, 2] = 3
 
 render.register_state(1, render.pygame.Color(255, 0, 0, 255))  # Full Red
+render.register_state(2, img, app = App)
 
 while True:
     for event in App.clear_events(): ...  # Clear events. You can process/check them if you
